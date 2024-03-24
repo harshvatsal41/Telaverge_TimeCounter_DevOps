@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Time Clock</title>
+</head>
+<body>
+<h1>Time Clock</h1>
+
+<p>Elapsed Time: <span id="elapsedTime">00:00:00</span></p>
+<button id="continueBtn" onclick="continueClock()" disabled>Continue</button>
+<button id="stopBtn" onclick="stopClock()" disabled>Stop</button>
+<button id="startBtn" onclick="startClock()">Start</button>
+<button id="resetBtn" onclick="resetClock()" disabled>Reset</button>
+
+<script>
+    var startTime = 0;
+    var elapsedTime = 0;
+    var timerInterval;
+
+    // Function to start the clock
+    function startClock() {
+        startTime = new Date().getTime() - elapsedTime; // Adjust start time by elapsed time
+        timerInterval = setInterval(updateClock, 1000);
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+        document.getElementById('resetBtn').disabled = true;
+        document.getElementById('continueBtn').disabled = true;
+    }
+
+    // Function to stop the clock
+    function stopClock() {
+        clearInterval(timerInterval);
+        elapsedTime = new Date().getTime() - startTime;
+        document.getElementById('elapsedTime').textContent = formatTime(elapsedTime);
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('resetBtn').disabled = false;
+        document.getElementById('continueBtn').disabled = false;
+
+        fetch('/stopClock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'elapsedTime=' + (new Date().getTime() - startTime) // Send elapsed time since start
+        });
+    }
+
+    // Function to reset the clock
+    function resetClock() {
+        clearInterval(timerInterval);
+        startTime = 0;
+        elapsedTime = 0;
+        document.getElementById('elapsedTime').textContent = '00:00:00';
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('resetBtn').disabled = true;
+        document.getElementById('continueBtn').disabled = true;
+    }
+
+    // Function to continue the clock
+    function continueClock() {
+        startClock();
+    }
+
+    // Function to update the clock display
+    function updateClock() {
+        var currentTime = new Date().getTime();
+        elapsedTime = currentTime - startTime;
+        document.getElementById('elapsedTime').textContent = formatTime(elapsedTime);
+    }
+
+    // Function to format time as HH:MM:SS
+    function formatTime(milliseconds) {
+        var hours = Math.floor(milliseconds / (1000 * 60 * 60));
+        var minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
+        return padZero(hours) + ':' + padZero(minutes) + ':' + padZero(seconds);
+    }
+
+    // Function to pad zero to single digits
+    function padZero(num) {
+        return (num < 10) ? '0' + num : num;
+    }
+</script>
+</body>
+</html>
